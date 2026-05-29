@@ -1,0 +1,3 @@
+pheno_name	ancestry	pheno_covar_file	covar_cols	qcovar_cols
+abd_aortic_diameter	EUR	/path/to/abd_aortic_diameter_eur.tsv	"age,age2,sex,height,batch_1,batch_2,batch_3,PC1,PC2,PC3,PC4,SliceThickness,Manufacturer_GE_MEDICAL_SYSTEMS,Manufacturer_Philips,Manufacturer_SIEMENS,Manufacturer_TOSHIBA"	"sex,batch_1,batch_2,batch_3,Manufacturer_GE_MEDICAL_SYSTEMS,Manufacturer_Philips,Manufacturer_SIEMENS,Manufacturer_TOSHIBA"
+abd_aortic_diameter	AFR	/path/to/abd_aortic_diameter_afr.tsv	"age,age2,sex,height,batch_1,batch_2,batch_3,PC1,PC2,PC3,PC4,SliceThickness,Manufacturer_GE_MEDICAL_SYSTEMS,Manufacturer_Philips,Manufacturer_SIEMENS,Manufacturer_TOSHIBA"	"sex,batch_1,batch_2,batch_3,Manufacturer_GE_MEDICAL_SYSTEMS,Manufacturer_Philips,Manufacturer_SIEMENS,Manufacturer_TOSHIBA"

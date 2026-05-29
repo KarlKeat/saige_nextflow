@@ -1,0 +1,72 @@
+#!/bin/bash
+### RITCHIE LAB BATCH JOB TEMPLATE (SHORT)
+### Copy this file for your job; refer to long-template.bsub for details.
+### To submit the job, run: bsub < myscript.bsub
+
+#BSUB -J "saige_step2"          # Job name; $LSB_JOBINDEX will have the index
+#-#BSUB -o bsub.%J-%I.out      # stdout file; %J is job ID, %I is array index
+#-#BSUB -e bsub.%J-%I.err      # stderr file; if omitted, combined with stdout
+#-#BSUB -B                     # Email on job start
+#-#BSUB -N                       # Email on job end; else, add summary to output
+#-#BSUB -u "user@example.com"  # Email to this address
+#BSUB -R "rusage[mem=16GB]"  # Memory required, in MB (reserve this much)
+#BSUB -M 16GB                # Memory limit, in MB (kill job beyond this)
+#BSUB -v 8192                # Swap memory limit, in MB
+#BSUB -W 72:00               # Wall time limit, in hours:minutes
+#BSUB -n 1                     # Number of cores, maybe on many nodes
+#BSUB -R "span[hosts=1]"
+#BSUB -R "select[ostype>=CENT7]"
+#BSUB -q epistasis_long
+
+
+### JOB COMMANDS
+
+module load DEV/singularity
+ORGAN="spine"
+PHENO="dish_score_sum_max_rint"
+PHENO_PATH_EUR="/project/verma_shared/projects/calico/idp_gwas/spine/dish_score_sum_pheno_covar_eur.tsv"
+PHENO_PATH_AFR="/project/verma_shared/projects/calico/idp_gwas/spine/dish_score_sum_pheno_covar_afr.tsv"
+
+SIF_PATH="/project/verma_shared/projects/calico/idp_gwas/scripts/saige.sif"
+PGEN_PATH="/project/verma_shared/projects/calico/idp_gwas/common/pgen_filtered_by_chrom"
+OUT_DIR="/project/verma_shared/projects/calico/idp_gwas/"
+
+mkdir -p $OUT_DIR/${ORGAN}/step2_out/AFR
+mkdir -p $OUT_DIR/${ORGAN}/step2_out/EUR
+
+chromlist=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22)
+for chrom in "${chromlist[@]}"; do
+    singularity exec -B /scratch:/scratch -B /static:/static -B /project:/project $SIF_PATH \
+        /usr/local/bin/step2_SPAtests.R \
+	    --pgenPrefix=${PGEN_PATH}/EUR/calico_pmbb_chr${chrom}_EUR \
+            --sampleFile=${PHENO_PATH_EUR} \
+            --AlleleOrder=ref-first \
+            --SAIGEOutputFile=${OUT_DIR}/${ORGAN}/step2_out/EUR/saige_step2_${PHENO}_EUR_chr${chrom}.txt \
+            --chrom=$chrom       \
+            --minMAF=0 \
+            --minMAC=20 \
+            --GMMATmodelFile=${OUT_DIR}/${ORGAN}/step1_out/EUR/saige_step1_${PHENO}_EUR.rda \
+            --varianceRatioFile=${OUT_DIR}/${ORGAN}/step1_out/EUR/saige_step1_${PHENO}_EUR.varianceRatio.txt \
+            --is_Firth_beta=TRUE \
+            --pCutoffforFirth=0.05 \
+            --is_output_moreDetails=TRUE \
+            --LOCO=TRUE
+done
+
+for chrom in "${chromlist[@]}"; do
+    singularity exec -B /scratch:/scratch -B /static:/static -B /project:/project $SIF_PATH \
+        /usr/local/bin/step2_SPAtests.R \
+            --pgenPrefix=${PGEN_PATH}/AFR/calico_pmbb_chr${chrom}_AFR \
+            --sampleFile=${PHENO_PATH_AFR} \
+            --AlleleOrder=ref-first \
+            --SAIGEOutputFile=${OUT_DIR}/${ORGAN}/step2_out/AFR/saige_step2_${PHENO}_AFR_chr${chrom}.txt \
+            --chrom=$chrom       \
+            --minMAF=0 \
+            --minMAC=20 \
+            --GMMATmodelFile=${OUT_DIR}/${ORGAN}/step1_out/AFR/saige_step1_${PHENO}_AFR.rda \
+            --varianceRatioFile=${OUT_DIR}/${ORGAN}/step1_out/AFR/saige_step1_${PHENO}_AFR.varianceRatio.txt \
+            --is_Firth_beta=TRUE \
+            --pCutoffforFirth=0.05 \
+            --is_output_moreDetails=TRUE \
+            --LOCO=TRUE
+done

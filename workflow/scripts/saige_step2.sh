@@ -11,7 +11,7 @@ OUT_DIR="."
 chromlist=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22)
 for chrom in "${chromlist[@]}"; do
     /usr/local/bin/step2_SPAtests.R \
-        --pgenPrefix=${PGEN_DIR}/${PHENO}_pmbb_chr${chrom}_${ANCESTRY} \
+        --pgenPrefix=${PGEN_DIR}/${PHENO}_chr${chrom}_${ANCESTRY} \
         --sampleFile=${PHENO_PATH} \
         --AlleleOrder=ref-first \
         --SAIGEOutputFile=${OUT_DIR}/saige_step2_${PHENO}_${ANCESTRY}_chr${chrom}.txt \

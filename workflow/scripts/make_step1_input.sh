@@ -5,8 +5,6 @@ ANCESTRY=$2
 CHROM_DIR=$3
 OUT_DIR="."
 
-${PHENO}_pmbb_chr${chrom}_${ANCESTRY}
-
 chromlist=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22)
 for chrom in "${chromlist[@]}"; do
     /opt/conda/bin/plink2 \
@@ -21,7 +19,7 @@ for chrom in "${chromlist[@]}"; do
         --out ${OUT_DIR}/${PHENO}_chr${chrom}_${ANCESTRY}   
 done
 
-find ${OUT_DIR}/ -name *.psam | sed 's/\.[^.]*$//' > pruned_files.txt
+find ${OUT_DIR}/ -name "*.psam" | sed 's/\.[^.]*$//' > pruned_files.txt
 /opt/conda/bin/plink2 \
     --pmerge-list pruned_files.txt \
     --make-bed \

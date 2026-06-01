@@ -1,11 +1,4 @@
 #!/usr/bin/env nextflow
-
-def get_burden_name(file) {
-    def basename = file.baseName
-    def matches = basename =~ /^.*?([0-9]{2}_.*)_(?:EUR|AFR|ALL)_pmbb_exome_genotypes$/
-    return matches[0][1]
-}
-
 workflow {
     phenos_ch = Channel
         .fromPath(params.tsv_input)
@@ -26,16 +19,12 @@ workflow {
         .groupTuple(by: [0, 1, 2, 3, 4]).combine(chrom_ch)  // collect all chunks sharing the same pheno_name + ancestry
 
     PLINK2_MERGE(merge_input_ch)
-
-    ld_prune_in_ch = PLINK2_MERGE.out.plink_preprocessed_chromosomes
-        .groupTuple(by: [0, 1, 2, 3, 4])
+    plink2_merged_chroms = PLINK2_MERGE.out.plink_preprocessed_chromosomes.groupTuple(by: [0, 1, 2, 3, 4])
     
-    MAKE_STEP1_INPUT(ld_prune_in_ch)
+    MAKE_STEP1_INPUT(plink2_merged_chroms)
     SAIGE_STEP1(MAKE_STEP1_INPUT.out.step1_in)
 
-    step2_in_ch = PLINK2_MERGE.out.plink_preprocessed_chromosomes
-        .groupTuple(by: [0, 1, 2, 3, 4]).join(SAIGE_STEP1.out.step1_out, by: [0, 1, 2, 3, 4])
-
+    step2_in_ch = plink2_merged_chroms.join(SAIGE_STEP1.out.step1_out, by: [0, 1, 2, 3, 4])
     SAIGE_STEP2(step2_in_ch)
 }
 
@@ -49,7 +38,7 @@ process PLINK2_PREPROCESS {
 
     script:
         """ 
-        ./scripts/preprocess_imputed.sh $pmbb_imputed_prefix $ancestry $pheno_covar_file
+        ${projectDir}/scripts/preprocess_imputed.sh $pmbb_imputed_prefix $ancestry $pheno_covar_file
         """
 }
 
@@ -63,7 +52,7 @@ process PLINK2_MERGE {
 
     script:
         """ 
-        ./scripts/merge_preprocessed_chunks.sh $pheno_name $ancestry $chrom chunks/
+        ${projectDir}/scripts/merge_preprocessed_chunks.sh $pheno_name $ancestry $chrom chunks/
         """
 }
 
@@ -78,14 +67,14 @@ process MAKE_STEP1_INPUT {
     script:
         ld_pruned_merged_output = pheno_name + "_" + ancestry + "_pruned.*"
         """ 
-        ./scripts/make_step1_input.sh $pheno_name $ancestry chroms/
+        ${projectDir}/scripts/make_step1_input.sh $pheno_name $ancestry chroms/
         """
 }
 
 process SAIGE_STEP1 {
     publishDir "${params.outputDir}/$pheno_name/step1_out/"
     input: 
-        tuple val(pheno_name), val(ancestry), val(pheno_covar_file), val(covar_list), val(qcovar_list), path(ld_pruned_imputed)
+        tuple val(pheno_name), val(ancestry), val(pheno_covar_file), val(covar_list), val(qcovar_list), path("ld_pruned_imputed/*")
 
     output:
         tuple val(pheno_name), val(ancestry), val(pheno_covar_file), val(covar_list), val(qcovar_list), path(grm_file), path(varianceRatio_file), emit: step1_out
@@ -94,7 +83,7 @@ process SAIGE_STEP1 {
         grm_file = "saige_step1_"+ pheno_name + "_" + ancestry + ".rda"
         varianceRatio_file = "saige_step1_"+ pheno_name + "_" + ancestry + ".varianceRatio.txt"
         """ 
-        ./scripts/saige_step1.sh $pheno_name $ancestry $pheno_covar_file $covar_list $qcovar_list $ld_pruned_imputed
+        ${projectDir}/scripts/saige_step1.sh $pheno_name $ancestry $pheno_covar_file $covar_list $qcovar_list ld_pruned_imputed/${pheno_name}_${ancestry}_pruned ${params.trait_type} ${parans.inv_normalize} ${task.cpus}
         """
 }
 
@@ -108,7 +97,7 @@ process SAIGE_STEP2 {
 
     script:
         """ 
-        ./scripts/saige_step2.sh $pheno_name $ancestry $pheno_covar_file $grm_file $varianceRatio_file chroms/
+        ${projectDir}/scripts/saige_step2.sh $pheno_name $ancestry $pheno_covar_file $grm_file $varianceRatio_file chroms/
         """
 }
 

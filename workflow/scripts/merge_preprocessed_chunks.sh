@@ -14,5 +14,5 @@ PATTERN="*chr${CHROM}_*_${ANCESTRY}.psam"
 find $CHUNKS_DIR -name $PATTERN | sed 's/\.[^.]*$//' > mergelist_${CHROM}_${ANCESTRY}.txt
 
 /opt/conda/bin/plink2 \
-    --pmerge-list mergelist_${chrom}_${ANCESTRY}.txt \
-    --out ${OUT_DIR}/${PHENO}_chr${chrom}_${ANCESTRY}
+    --pmerge-list mergelist_${CHROM}_${ANCESTRY}.txt \
+    --out ${OUT_DIR}/${PHENO}_chr${CHROM}_${ANCESTRY}

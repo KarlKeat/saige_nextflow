@@ -1,4 +1,8 @@
 work/
+*.sif
+*.log
+.nextflow
+idp_gwas/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
